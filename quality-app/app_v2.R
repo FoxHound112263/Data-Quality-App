@@ -1,6 +1,9 @@
 # Shiny dashboard attempt
 
 library(shinydashboard)
+library(data.table)
+
+data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T) 
 
 ui <- dashboardPage(
     dashboardHeader(title = "Calidad"),
