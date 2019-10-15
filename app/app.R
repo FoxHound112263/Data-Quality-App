@@ -63,8 +63,9 @@ ui <- fluidPage(
   # Tabs
   tabsetPanel(type = "tabs",
               tabPanel("Resumen", verbatimTextOutput("resumen")),
-              tabPanel("Completitud", tableOutput("missing")),
-              tabPanel("Veracidad", tableOutput("table"))
+              tabPanel("Completitud", verbatimTextOutput("missing")),
+              tabPanel("Veracidad", verbatimTextOutput("vera")),
+              tabPanel("Matching", verbatimTextOutput("matching"))
   )
   
   
@@ -81,7 +82,7 @@ server <- function(input, output) {
   py_run_string("import sys")
   py_run_string("import codecs")
   py_run_string("sys.setrecursionlimit(10000)")
-  py_run_file("C:/Users/cmayorquin/Desktop/CALIDAD/funciones.py")
+  py_run_file("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/code/funciones.py")
   
   v <- reactiveValues(data = NULL)
 
@@ -116,7 +117,7 @@ server <- function(input, output) {
   
   observeEvent(input$button, {
     # Resumen
-    py_run_string("base_original = pd.read_excel('C:/Users/cmayorquin/Desktop/CALIDAD/appCalidad/test.xlsx')")
+    py_run_string("base_original = pd.read_excel('C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx')")
     tabla_resumen <- py_run_string("tabla_resumen_o = tabla_resumen(base_original)")
     tabla_resumen_2 <- py_to_r(tabla_resumen)
     v$data <- tabla_resumen_2$tabla_resumen_o
@@ -126,19 +127,81 @@ server <- function(input, output) {
     missing_2 <- py_to_r(missing)
     v$missing <- missing_2$missing_p
     
+    # Veracidad
+    #-----------------------------------------------
+    # parte 1
+    filas_no_unic_porc <- py_run_string("filas_no_unic_porc_p = filas_no_unic_porc(base_original)")
+    filas_no_unic_porc_2 <- py_to_r(filas_no_unic_porc)
+    
+    # parte 2
+    col_no_unic_porc <-  py_run_string("col_no_unic_porc_p = col_no_unic_porc(base_original)")
+    col_no_unic_porc_2 <-  py_to_r(col_no_unic_porc)
+    
+    # parte 3
+    filas_no_unic_num <- py_run_string("filas_no_unic_num_p = filas_no_unic_num(base_original)")
+    filas_no_unic_num_2 <- py_to_r(filas_no_unic_num)
+    
+    # parte 4
+    col_no_unic_num <- py_run_string("col_no_unic_num_p = col_no_unic_num(base_original)")
+    col_no_unic_num_2 <- py_to_r(col_no_unic_num)
+    
+    # unión
+    union <- c(filas_no_unic_porc_2$filas_no_unic_porc_p, col_no_unic_porc_2$col_no_unic_porc_p,
+              filas_no_unic_num_2$filas_no_unic_num_p, col_no_unic_num_2$col_no_unic_num_p)
+    names(union) <- c('Porcentaje de filas no únicas:',
+                     'Porcentaje de columnas no únicas:',
+                     'Número de filas no únicas:',
+                     'Número de columnas no únicas:')
+    v$vera <- union
+    #------------------------------------------------
     
     
+    # Matching de filas y columnas no únicas
+    #-----------------------------------------------
+    # Columnas
+    duplicados_col <- py_run_string("duplicados_col_p = duplicados_col(base_original)")
+    duplicados_col_2 <- py_to_r(duplicados_col)
+    
+    
+    # Filas
+    duplicados_fila <- py_run_string("duplicados_fila_p = duplicados_fila(base_original)")
+    duplicados_fila_2 <- py_to_r(duplicados_fila)
+    
+    # union_2
+    union_2 <- c(duplicados_col_2$duplicados_col_p, duplicados_fila_2$duplicados_fila_p)
+    names(union_2) <- c('Matching de columnas duplicadas:',
+                        'Matching de filas duplicadas:')
+    
+    v$matching <- union_2
+    #------------------------------------------------
+    
+    
+    # Consistencia
+    # Porcentaje de outliers
     
   })
 
-
+  # Resumen
   output$resumen <- renderPrint({
     v$data
   })
   
-  output$missing <- renderTable({
+  # Completitud 
+  output$missing <- renderPrint({
     v$missing
   })
+  
+  # Veracidad
+  output$vera <- renderPrint({
+    v$vera
+  })
+  
+  # Matching
+  output$matching <- renderPrint({
+    v$matching
+  })
+
+  
   
 # END  
 }

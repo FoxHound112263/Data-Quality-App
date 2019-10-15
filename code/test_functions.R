@@ -2,11 +2,12 @@ trace(utils:::unpackPkgZip, edit=TRUE)
 
 # Correr c√≥digo de Python
 library(reticulate)
+library(openxlsx)
 #use_python("/usr/bin/python3")
 
 ## install.packages("RSocrata")
 
-library("RSocrata")
+library(RSocrata)
 
 
 
@@ -20,20 +21,22 @@ py_run_string("import pandas as pd")
 py_run_string("import sys")
 py_run_string("sys.setrecursionlimit(10000)")
 
-base_original <-  py_run_string("base_original=pd.read_excel('C:/Users/cmayorquin/Desktop/CALIDAD/Reporte DFI 2019 Julio v4 DNP.xlsx')")
+# Puse la de test aquÌ arriba por weÛn, pero en teorÌa solo deberÌa ir esto y nada m·s
+base_original <-  py_run_string("base_original=pd.read_excel('C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx')")
 base_original <- base_original$base_original
 
-py_run_file("C:/Users/cmayorquin/Desktop/CALIDAD/funciones.py")
+py_run_file("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/code/funciones.py")
 
 # Array
 tabla_resumen <- py_run_string("tabla_resumen_o = tabla_resumen(base_original)")
-tabla_resumen$tabla_resumen_o
+que_es <- tabla_resumen$tabla_resumen_o
 #-------------
 # TEST
 openxlsx::read.xlsx()
-prueba <- read.xlsx("C:/Users/cmayorquin/Desktop/Repositorio/Bases_de_Rama_Judicial-DEA.xlsx")
+prueba <- read.xlsx("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx")
+# Write the csv file into a xlsx one so it can be read easily with pandas
 write.xlsx(prueba, 'test.xlsx')
-py_run_string("base_original = pd.read_excel('C:/Users/cmayorquin/Desktop/CALIDAD/appCalidad/test.xlsx')")
+py_run_string("base_original = pd.read_excel('C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx')")
 
 
 tabla_resumen_prueba <- py_run_string("tabla_resumen_p = tabla_resumen(base_original)")
@@ -42,14 +45,16 @@ tabla_resumen_r$tabla_resumen_p
 class(tabla_resumen_prueba$tabla_resumen_p)
 
 #-------------
-# Tabla
+# Tabla - Tipo de columna: toca hacer esto con R porque arroja los objetos de Python en una notaciÛn extraÒa
 tipo <- py_run_string("tipo = pd.DataFrame(tipo_col(base_original))")
 tipo$tipo
 
 # Tabla
 missing <- py_run_string("missing_p = pd.DataFrame(missing_porc(base_original))")
+missing$missing_p
 class(missing$missing_p)
 
+# Veracidad ------------------------
 # Valor
 filas_no_unic_porc <- py_run_string("filas_no_unic_porc = filas_no_unic_porc(base_original)")
 filas_no_unic_porc$filas_no_unic_porc
@@ -65,6 +70,9 @@ filas_no_unic_num$filas_no_unic_num
 # Valor
 col_no_unic_num <- py_run_string("col_no_unic_num = col_no_unic_num(base_original)")
 col_no_unic_num$col_no_unic_num
+
+
+#--------------------------------------
 
 # Tabla
 duplicados_col <- py_run_string("duplicados_col = duplicados_col(base_original)")
@@ -83,12 +91,12 @@ valor_unico_texto <-  py_run_string("valor_unico_texto = valor_unico_texto(base_
 valor_unico_texto$valor_unico_texto
 
 # Tabla
-descripcion <- py_run_string("descripcion = descripcion(base_original)")
-descripcion$descripcion
+descripcion <- py_run_string("descripcion_p = descripcion(base_original)")
+descripcion$descripcion_p
 
 # Tabla
-outliers_porc <-  py_run_string("outliers_porc = outliers_porc(base_original)")
-outliers_porc$outliers_porc
+outliers_porc <-  py_run_string("outliers_porc_p = outliers_porc(base_original)")
+outliers_porc$outliers_porc_p
 
 ##################### BASE DE PROCOLOMBIA
 #os.chdir('D:\OneDrive - Departamento Nacional de Planeacion\Datos abiertos\Otros insumos')
