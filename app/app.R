@@ -65,7 +65,8 @@ ui <- fluidPage(
               tabPanel("Resumen", verbatimTextOutput("resumen")),
               tabPanel("Completitud", verbatimTextOutput("missing")),
               tabPanel("Veracidad", verbatimTextOutput("vera")),
-              tabPanel("Matching", verbatimTextOutput("matching"))
+              tabPanel("Matching", verbatimTextOutput("matching")),
+              tabPanel("Consistencia", verbatimTextOutput("consis"))
   )
   
   
@@ -178,6 +179,10 @@ server <- function(input, output) {
     
     # Consistencia
     # Porcentaje de outliers
+    outliers_porc <-  py_run_string("outliers_porc_p = outliers_porc(base_original)")
+    outliers_porc_2 <- py_to_r(outliers_porc)
+    v$consis <- outliers_porc_2$outliers_porc_p
+    
     
   })
 
@@ -201,7 +206,10 @@ server <- function(input, output) {
     v$matching
   })
 
-  
+  # Consistencia
+  output$consis <- renderPrint({
+    v$consis
+  })
   
 # END  
 }
