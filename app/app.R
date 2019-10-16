@@ -11,7 +11,8 @@ library(shinydashboard)
 ui <- fluidPage(
   # App title ----
   titlePanel("Calidad de datos"),
-  
+  p("Esta aplicación calcula métricas de calidad para el Portal de Datos Abiertos de Colombia: https://www.datos.gov.co/"),
+  p("Los datos son descargados..."),
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
     
@@ -31,7 +32,7 @@ ui <- fluidPage(
       # Input: Checkbox if file has header ----
       checkboxInput("header", "Encabezado", TRUE),
       
-      # Horizontal line ----
+      # Línea horizontal ----
       tags$hr(),
       
       # Input: Select number of rows to display ----
@@ -41,7 +42,10 @@ ui <- fluidPage(
                    selected = "head"),
       
       # Botón para calcular métricas de calidad
-      actionButton(inputId = "button",label = "Calcular métricas de calidad")
+      actionButton(inputId = "button",label = "Calcular métricas de calidad"),
+      
+      actionButton(inputId = "button_2",label = "Generar reporte")
+      
       
     # Termina sidebar panel
     ),
@@ -63,10 +67,13 @@ ui <- fluidPage(
   # Tabs
   tabsetPanel(type = "tabs",
               tabPanel("Resumen", verbatimTextOutput("resumen")),
+              tabPanel("Descripción", verbatimTextOutput("desc")),
               tabPanel("Completitud", verbatimTextOutput("missing")),
               tabPanel("Veracidad", verbatimTextOutput("vera")),
               tabPanel("Matching", verbatimTextOutput("matching")),
-              tabPanel("Consistencia", verbatimTextOutput("consis"))
+              tabPanel("Consistencia", verbatimTextOutput("consis")),
+              tabPanel("Valores únicos", verbatimTextOutput("val_unic")),
+              tabPanel("Metadatos", verbatimTextOutput("meta"))
   )
   
   
@@ -123,6 +130,11 @@ server <- function(input, output) {
     tabla_resumen_2 <- py_to_r(tabla_resumen)
     v$data <- tabla_resumen_2$tabla_resumen_o
     
+    # Descripción
+    descripcion <- py_run_string("descripcion_p = descripcion(base_original)")
+    descripcion_2 <- py_to_r(descripcion)
+    v$desc <- descripcion_2$descripcion_p
+    
     # Completitud
     missing <- py_run_string("missing_p = pd.DataFrame(missing_porc(base_original))")
     missing_2 <- py_to_r(missing)
@@ -178,17 +190,30 @@ server <- function(input, output) {
     
     
     # Consistencia
+    #------------------------------------------------
     # Porcentaje de outliers
     outliers_porc <-  py_run_string("outliers_porc_p = outliers_porc(base_original)")
     outliers_porc_2 <- py_to_r(outliers_porc)
     v$consis <- outliers_porc_2$outliers_porc_p
+    #------------------------------------------------
+    
+    # Valores únicos
+    valor_unico_texto <-  py_run_string("valor_unico_texto_p = valor_unico_texto(base_original)")
+    valor_unico_texto_2 <- py_to_r(valor_unico_texto)
+    v$val_unic <-  valor_unico_texto_2$valor_unico_texto_p
     
     
   })
 
   # Resumen
   output$resumen <- renderPrint({
+    if(is.null(v$resumen)){return ()}
     v$data
+  })
+  
+  # Descripción
+  output$desc <- renderPrint({
+    v$desc
   })
   
   # Completitud 
@@ -211,55 +236,12 @@ server <- function(input, output) {
     v$consis
   })
   
+  # Valores únicos
+  output$val_unic <- renderPrint({
+    v$val_unic
+  })
+  
 # END  
 }
 
 shinyApp(ui = ui, server = server)
-
-
-# shinyServer(function(input, output,session) {
-#   
-#   dataframe<-reactive({
-#     if (is.null(input$datafile))
-#       return(NULL)                
-#     data<-read.csv(input$datafile$datapath)
-#     data<- data %>% group_by(C) %>% mutate(A) %>% 
-#       mutate(B) %>% mutate(add = (A+B)) %>% mutate(sub = (A-B))
-#     data
-#   })
-#   output$table <- renderTable({
-#     dataframe()
-#   })
-#   output$plot <- renderPlot({
-#     if(!is.null(dataframe()))
-#       ggplot(dataframe(),aes(x=X,y=add))+geom_point()
-#   })
-# })
-
-
-# Por si acaso
-# read.xlsx(inFile$datapath,
-#           header = TRUE,sheetIndex = 1,
-#           stringsAsFactors = FALSE)
-
-
-
-# Servidor original que funciona más o menos
-# Get the upload file
-# get_item_list <- reactive({
-#   inFile <- input$file1
-#   
-#   if (is.null(inFile)) {
-#     return(NULL) }
-#   
-#   if (input$fileType_Input == 1) {
-#     datos <-  read.csv(inFile$datapath,
-#                        header = TRUE,
-#                        stringsAsFactors = FALSE,encoding = 'UTF-8')
-#   } else {
-#     datos <- openxlsx::read.xlsx(inFile$datapath,
-#                                  colNames=T,sheet=1)  
-#     datos
-#     
-#   }
-# })
