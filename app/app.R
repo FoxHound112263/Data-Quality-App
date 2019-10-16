@@ -44,7 +44,7 @@ ui <- fluidPage(
       # Botón para calcular métricas de calidad
       actionButton(inputId = "button",label = "Calcular métricas de calidad"),
       
-      actionButton(inputId = "button_2",label = "Generar reporte")
+      actionButton(inputId = "button2",label = "Generar reporte")
       
       
     # Termina sidebar panel
@@ -54,8 +54,8 @@ ui <- fluidPage(
     mainPanel(
       
       # Output: Data file ----
-      dataTableOutput("contents")#,
-      
+      dataTableOutput("contents"),
+      verbatimTextOutput("marki")
       # Test primera métrica
       #tableOutput("resumen")
       
@@ -74,6 +74,7 @@ ui <- fluidPage(
               tabPanel("Consistencia", verbatimTextOutput("consis")),
               tabPanel("Valores únicos", verbatimTextOutput("val_unic")),
               tabPanel("Metadatos", verbatimTextOutput("meta"))
+              
   )
   
   
@@ -118,7 +119,7 @@ server <- function(input, output) {
     
     
     
-    #df_py <- r_to_py(df,convert = T)
+    
     
     
   })
@@ -129,6 +130,8 @@ server <- function(input, output) {
     tabla_resumen <- py_run_string("tabla_resumen_o = tabla_resumen(base_original)")
     tabla_resumen_2 <- py_to_r(tabla_resumen)
     v$data <- tabla_resumen_2$tabla_resumen_o
+    objeto_1 <- py_to_r(v$data)
+    save(objeto_1,file = "C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/saved objects/objetos.RData")
     
     # Descripción
     descripcion <- py_run_string("descripcion_p = descripcion(base_original)")
@@ -207,7 +210,7 @@ server <- function(input, output) {
 
   # Resumen
   output$resumen <- renderPrint({
-    if(is.null(v$resumen)){return ()}
+    #if(is.null(v$resumen)){return ()}
     v$data
   })
   
@@ -240,6 +243,22 @@ server <- function(input, output) {
   output$val_unic <- renderPrint({
     v$val_unic
   })
+  
+  # Al presionar el botón de generar reporte, do this
+  observeEvent(input$button2, {
+    # Markdown section
+    output$marki <- renderText({
+      rmarkdown::render("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/markdown/reporte.Rmd", encoding = "UTF-8",clean = T)
+      fil <- "C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/markdown/reporte.html"
+      if (file.exists(fil)) mensaje <- "Reporte terminado"
+      mensaje
+      
+    })
+    
+  })
+  
+
+  
   
 # END  
 }
