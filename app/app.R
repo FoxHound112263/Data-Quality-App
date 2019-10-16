@@ -4,11 +4,13 @@ library(openxlsx)
 library(reticulate)
 library(RSocrata)
 library(shinydashboard)
+library(shinyjs)
 
 
 # Fucking user interface
 
 ui <- fluidPage(
+  useShinyjs(),
   # App title ----
   titlePanel("Calidad de datos"),
   p("Esta aplicación calcula métricas de calidad para el Portal de Datos Abiertos de Colombia: https://www.datos.gov.co/"),
@@ -18,6 +20,10 @@ ui <- fluidPage(
     
     # Sidebar panel for inputs ----
     sidebarPanel(
+      
+      textInput("text", label = h3("Ingrese el api_id"), value = "api_id..."),
+      actionButton(inputId = "button0",label = "Cargar base escogida"),
+      
       
       # Input: Select a file ----
       fileInput("file1",
@@ -30,16 +36,16 @@ ui <- fluidPage(
       tags$hr(),
       
       # Input: Checkbox if file has header ----
-      checkboxInput("header", "Encabezado", TRUE),
+      #checkboxInput("header", "Encabezado", TRUE),
       
       # Línea horizontal ----
       tags$hr(),
       
-      # Input: Select number of rows to display ----
-      radioButtons("disp", "Mostrar",
-                   choices = c(Primeras = "head",
-                               Todas = "all"),
-                   selected = "head"),
+      # # Input: Select number of rows to display ----
+      # radioButtons("disp", "Mostrar",
+      #              choices = c(Primeras = "head",
+      #                          Todas = "all"),
+      #              selected = "head"),
       
       # Botón para calcular métricas de calidad
       actionButton(inputId = "button",label = "Calcular métricas de calidad"),
@@ -53,6 +59,7 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       
+      #u_data,
       # Output: Data file ----
       dataTableOutput("contents"),
       verbatimTextOutput("marki")
@@ -100,22 +107,31 @@ server <- function(input, output) {
     # input$file1 will be NULL initially. After the user selects
     # and uploads a file, head of that data file by default,
     # or all rows if selected, will be shown.
+    # if(is.null(input$text)) u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
+    #   else u_data <- read.socrata(paste0("https://www.datos.gov.co/resource/",str(input$text),".json"),app_token = "WnkJhtSI1mjrtpymw0gVNZEcl")
+    # 
+    #   u_data
+    # 
+
+
     
-    req(input$file1)
+    u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
     
-    # Para archivo sepearado por comas
-    #df <- read.csv(input$file1$datapath,header = TRUE, stringsAsFactors = FALSE,encoding = 'UTF-8')
-    # Para archivo de Excel
-    df <- read.xlsx(input$file1$datapath,sheet = 1,colNames = T)
-    write.xlsx(df, 'test.xlsx')
-    
-    
-    if(input$disp == "head") {
-      return(head(df))
-    }
-    else {
-      return(df)
-    }
+    # req(input$file1)
+    # 
+    # # Para archivo sepearado por comas
+    # #df <- read.csv(input$file1$datapath,header = TRUE, stringsAsFactors = FALSE,encoding = 'UTF-8')
+    # # Para archivo de Excel
+    # df <- read.xlsx(input$file1$datapath,sheet = 1,colNames = T)
+    # write.xlsx(df, 'test.xlsx')
+    # 
+    # 
+    # if(input$disp == "head") {
+    #   return(head(df))
+    # }
+    # else {
+    #   return(df)
+    # }
     
     
     
