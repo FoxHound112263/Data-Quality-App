@@ -35,7 +35,7 @@ When you click the **Knit** button a document will be generated that includes bo
 load("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/saved objects/objetos.RData")
 ```
 
-## Including Plots
+## Primera métrica
 
 You can also embed plots, for example:
 
