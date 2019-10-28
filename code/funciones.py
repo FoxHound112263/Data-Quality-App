@@ -216,3 +216,83 @@ def info_base_tabla(api_id,tabla):
     conjuntos=tabla[tabla["externos"]=="Conjunto de Datos"]
     info_base=conjuntos.loc[tabla.loc[:,"api_id"]==api_id]
     return(info_base)
+    
+    
+############ METADATOS
+# OBTENER INFORMACIÓN DE COLUMNAS DE LA BASE DE DATOS SEGÚN LA METADATA
+def info_cols_meta(api_id):
+    import pandas as pd  
+    
+    tabla_url="https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=0"
+    tabla_conj=pd.read_csv(tabla_url)    
+    
+    metas=tabla_conj[tabla_conj["api_id"]==api_id]
+
+    dic_cols={}
+    for s in ["col_nombres","col_des","col_tipo"]:
+        col_nombres=metas['meta_columnas_nombre'].iloc[0].split(",")
+        col_nombres=[q.replace("[","").replace("]","").replace(" ","") for q in col_nombres]
+    
+        col_des=metas['meta_columnas_descr'].iloc[0].split(",")
+        col_des=[q.replace("[","").replace("]","").replace(" ","") for q in col_des]
+    
+        col_tipo=metas['meta_columnas_tipo'].iloc[0].split(",")
+        col_tipo=[q.replace("[","").replace("]","").replace(" ","") for q in col_tipo]
+    
+        dic_cols["col_nombres"]=col_nombres
+        dic_cols["col_des"]=col_des
+        dic_cols["col_tipo"]=col_tipo
+
+    cols_meta=pd.DataFrame(dic_cols)
+    cols_meta=cols_meta.sort_values(by="col_nombres").reset_index(drop=True)
+    return(cols_meta)
+    
+# COMPARAR LAS FILAS DE LOS METADATOS CON LA BASE DE DATOS MICRO
+def filas_vs_meta(api_id,token=None):
+    import pandas as pd
+    from sodapy import Socrata
+    
+    client=Socrata("www.datos.gov.co",app_token=token)
+    results=client.get(api_id,limit=1000000000)
+    base_original=pd.DataFrame.from_records(results)
+    
+    tabla_url="https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=0"
+    tabla_conj=pd.read_csv(tabla_url)
+    
+    meta_fila=tabla_conj.loc[tabla_conj.loc[:,"api_id"]==api_id].loc[:,"meta_filas_numero"].iloc[0]
+    micro_fila=base_original.shape[0]
+    comparacion="Filas en metadatos: {0}. Filas en microdatos: {1}".format(meta_fila,micro_fila)
+    return(comparacion)
+    
+# COMPARAR LAS COLUMNAS DE LOS METADATOS CON LA BASE DE DATOS MICRO
+def cols_vs_meta(api_id,token=None):
+    import pandas as pd
+    from sodapy import Socrata
+    
+    client=Socrata("www.datos.gov.co",app_token=token)
+    results=client.get(api_id,limit=1000000000)
+    base_original=pd.DataFrame.from_records(results)
+    
+    tabla_url="https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=0"
+    tabla_conj=pd.read_csv(tabla_url)
+    
+    meta_col=tabla_conj.loc[tabla_conj.loc[:,"api_id"]==api_id].loc[:,"meta_columnas_numero"].iloc[0]
+    micro_col=base_original.shape[1]
+    comparacion="Columnas en metadatos: {0}. Columnas en microdatos: {1}".format(meta_col,micro_col)
+    return(comparacion)
+    
+# OBTENER LA TABLA QUE TIENE DATOS ABIERTOS CON INFORMACIÓN DE LAS BASES DE DATOS
+def traer_asset_inventory(token=None):
+    import pandas as pd
+    from sodapy import Socrata
+    client = Socrata("www.datos.gov.co",app_token=token)
+    results = client.get("sxce-zrhe",limit=1000000000)
+    asset_inventory = pd.DataFrame.from_records(results)
+    return(asset_inventory)
+    
+# OBTENER LA TABLA QUE SE SCRAPEÓ CON LA INFORMACIÓN DE LOS METADATOS DE DATOS ABIERTOS
+def traer_tabla_scrapeada():
+    import pandas as pd
+    tabla_url="https://dl.dropboxusercontent.com/s/kc4g6di6wgmeblv/tabla_final.txt?dl=0"
+    tabla_conj=pd.read_csv(tabla_url)    
+    return(tabla_conj)
