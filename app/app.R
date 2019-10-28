@@ -61,7 +61,7 @@ Ui <- fluidPage(
       
       #u_data,
       # Output: Data file ----
-      dataTableOutput("contents"),
+      tableOutput("contents"),
       #verbatimTextOutput("marki")
       # Test primera métrica
       #tableOutput("resumen")
@@ -106,7 +106,7 @@ Server <- function(input, output) {
     
   v <- reactiveValues(data = NULL)
 
-  output$contents <- renderDataTable({
+  output$contents <- renderTable({
     
     # input$file1 will be NULL initially. After the user selects
     # and uploads a file, head of that data file by default,
@@ -118,17 +118,25 @@ Server <- function(input, output) {
     # 
     
 
+
     # DNP
     #u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
     # CASA
     #u_data <-  fread("https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1",encoding = 'UTF-8',header = T)
-    u_data <- py_run_string("base_original = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
-    u_data2 <- py_to_r(u_data)
-    u_data3 <-  u_data2$base_original
-    u_data4 <- py_to_r(u_data3)
+
     
-    if(is.null(input$text)){
-      return (u_data4)
+    if(input$text==''){
+      u_data <- py_run_string("base_original = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
+      u_data2 <- py_to_r(u_data)
+      u_data3 <-  u_data2$base_original
+      u_data4 <- py_to_r(u_data3)
+    }
+      else {
+        df <- as.data.frame(read.socrata(
+          "https://www.datos.gov.co/resource/jnjs-rji6.json",
+          app_token = "WnkJhtSI1mjrtpymw0gVNZEcl"
+        ))
+        
       }
     
     # req(input$file1)
