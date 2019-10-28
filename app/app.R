@@ -9,7 +9,7 @@ library(shinyjs)
 
 # Fucking user interface
 
-ui <- fluidPage(
+Ui <- fluidPage(
   useShinyjs(),
   # App title ----
   titlePanel("Calidad de datos"),
@@ -21,7 +21,7 @@ ui <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
       
-      textInput("text", label = h3("Ingrese el api_id"), value = "api_id..."),
+      textInput("text", label = h3("Ingrese el api_id"), value = ""),
       actionButton(inputId = "button0",label = "Cargar base escogida"),
       
       
@@ -50,7 +50,7 @@ ui <- fluidPage(
       # Botón para calcular métricas de calidad
       actionButton(inputId = "button",label = "Calcular métricas de calidad"),
       
-      actionButton(inputId = "button2",label = "Generar reporte")
+      #actionButton(inputId = "button2",label = "Generar reporte")
       
       
     # Termina sidebar panel
@@ -62,7 +62,7 @@ ui <- fluidPage(
       #u_data,
       # Output: Data file ----
       dataTableOutput("contents"),
-      verbatimTextOutput("marki")
+      #verbatimTextOutput("marki")
       # Test primera métrica
       #tableOutput("resumen")
       
@@ -73,7 +73,8 @@ ui <- fluidPage(
   
   # Tabs
   tabsetPanel(type = "tabs",
-              tabPanel("Resumen", verbatimTextOutput("resumen")),
+              #tabPanel("Resumen", verbatimTextOutput("resumen")),
+              tabPanel("Resumen", tableOutput("resumen")),
               tabPanel("Descripción", verbatimTextOutput("desc")),
               tabPanel("Completitud", verbatimTextOutput("missing")),
               tabPanel("Veracidad", verbatimTextOutput("vera")),
@@ -91,15 +92,18 @@ ui <- fluidPage(
 
 # Lógica del fucking servidor
 
-server <- function(input, output) {
+Server <- function(input, output) {
   options(shiny.maxRequestSize=30*1024^2)
   py_run_string("import numpy as np")
   py_run_string("import pandas as pd")
   py_run_string("import sys")
   py_run_string("import codecs")
   py_run_string("sys.setrecursionlimit(10000)")
-  py_run_file("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/code/funciones.py")
-  
+  # DNP
+  #py_run_file("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/code/funciones.py")
+  # casa
+  py_run_file("C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\code\\funciones.py")
+    
   v <- reactiveValues(data = NULL)
 
   output$contents <- renderDataTable({
@@ -112,10 +116,20 @@ server <- function(input, output) {
     # 
     #   u_data
     # 
-
-
     
-    u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
+
+    # DNP
+    #u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
+    # CASA
+    #u_data <-  fread("https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1",encoding = 'UTF-8',header = T)
+    u_data <- py_run_string("base_original = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
+    u_data2 <- py_to_r(u_data)
+    u_data3 <-  u_data2$base_original
+    u_data4 <- py_to_r(u_data3)
+    
+    if(is.null(input$text)){
+      return (u_data4)
+      }
     
     # req(input$file1)
     # 
@@ -141,13 +155,29 @@ server <- function(input, output) {
   })
   
   observeEvent(input$button, {
+    
+    # test data -DNP
+    #py_run_string("base_original = pd.read_excel('C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx')")
+    # test data -DNP
+    py_run_string("base_original = pd.read_excel(r'C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\data\\test.xlsx')")
+    
+    # Final
+    #py_run_string("base_original = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
+    
     # Resumen
-    py_run_string("base_original = pd.read_excel('C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx')")
     tabla_resumen <- py_run_string("tabla_resumen_o = tabla_resumen(base_original)")
     tabla_resumen_2 <- py_to_r(tabla_resumen)
-    v$data <- tabla_resumen_2$tabla_resumen_o
-    objeto_1 <- py_to_r(v$data)
-    save(objeto_1,file = "C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/saved objects/objetos.RData")
+    #v$data <- tabla_resumen_2$tabla_resumen_o
+    objeto_prueba_1 <- tabla_resumen_2$tabla_resumen_o
+    v$resumen <- py_to_r(objeto_prueba_1) 
+    
+    # CREO QUE ESTO NO ES NECESARIO
+    
+    #DNP
+    #save(objeto_1,file = "C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/saved objects/objetos.RData")
+    # CASA
+    #save(objeto_1,file = "C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\saved objects\\objetos.RData")
+    
     
     # Descripción
     descripcion <- py_run_string("descripcion_p = descripcion(base_original)")
@@ -225,9 +255,11 @@ server <- function(input, output) {
   })
 
   # Resumen
-  output$resumen <- renderPrint({
-    #if(is.null(v$resumen)){return ()}
-    v$data
+  output$resumen <- renderTable({
+    if(is.null(v$resumen)){return ()}
+    as.data.frame.table(v$resumen) 
+
+    
   })
   
   # Descripción
@@ -260,18 +292,19 @@ server <- function(input, output) {
     v$val_unic
   })
   
-  # Al presionar el botón de generar reporte, do this
-  observeEvent(input$button2, {
-    # Markdown section
-    output$marki <- renderText({
-      rmarkdown::render("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/markdown/reporte.Rmd", encoding = "UTF-8",clean = T)
-      fil <- "C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/markdown/reporte.html"
-      if (file.exists(fil)) mensaje <- "Reporte terminado"
-      mensaje
-      
-    })
-    
-  })
+  # RepORTE - PABLO LO HARÁ EN PYTHON
+  # # Al presionar el botón de generar reporte, do this
+  # observeEvent(input$button2, {
+  #   # Markdown section
+  #   output$marki <- renderText({
+  #     rmarkdown::render("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/markdown/reporte.Rmd", encoding = "UTF-8",clean = T)
+  #     fil <- "C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/markdown/reporte.html"
+  #     if (file.exists(fil)) mensaje <- "Reporte terminado"
+  #     mensaje
+  #     
+  #   })
+  #   
+  # })
   
 
   
@@ -279,4 +312,4 @@ server <- function(input, output) {
 # END  
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = Ui, server = Server)
