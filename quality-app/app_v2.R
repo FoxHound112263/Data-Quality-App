@@ -54,7 +54,7 @@ ui <- dashboardPage(
             textInput(inputId = "text",
                       label = "Copie y pegue el api_id"),
             verbatimTextOutput("value"),
-            menuItem("Métricas", tabName = "widgets", icon = icon("th")),
+            menuItem("Métricas de calidad", tabName = "widgets", icon = icon("th")),
             actionButton(inputId = "button",label = "Calcular métricas de calidad")
             
             
@@ -67,20 +67,13 @@ ui <- dashboardPage(
             # First tab content
             tabItem(tabName = "dashboard",
                     DTOutput("contents"),style = "height:600px; overflow-y: scroll;overflow-x: scroll;",
-                    #DTOutput("Descripción", verbatimTextOutput("desc"))
-                    #tabPanel("Completitud", verbatimTextOutput("missing")),
-                    #tabPanel("Veracidad", verbatimTextOutput("vera")),
-                    #tabPanel("Matching", verbatimTextOutput("matching")),
-                    #tabPanel("Consistencia", verbatimTextOutput("consis")),
-                    #tabPanel("Valores únicos", verbatimTextOutput("val_unic")),
-                    #tabPanel("Metadatos", verbatimTextOutput("meta"))
-                    
+
  
             ),
             
             # Second tab content
             tabItem(tabName = "widgets",
-                    h2("contenido"),
+                    h2("Pilares de calidad"),
                     verbatimTextOutput("text"),
                     
                     fluidRow(
@@ -91,6 +84,8 @@ ui <- dashboardPage(
                         box("Matching", verbatimTextOutput("matching")),
                         box("Consistencia", verbatimTextOutput("consis")),
                         box("Valores únicos", tableOutput("val_unic"))
+                        #box("Metadatos", tableOutput("meta"))
+                        
                     )
                     
             )
@@ -107,7 +102,21 @@ server <- function(input, output) {
         # test data -DNP
         #py_run_string("base_original = pd.read_excel('C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/test.xlsx')")
         # test data -DNP
-        py_run_string("base_original = pd.read_excel(r'C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\data\\test.xlsx')")
+        
+        
+        #TEST
+        #py_run_string("base_original = pd.read_excel(r'C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\data\\test.xlsx')")
+        
+        py_save_object(v$text, 'base_original', pickle = "pickle")
+        
+        
+        choice <- py_load_object('base_original', pickle = 'pickle')
+        
+        base_original <- read.socrata(paste0("https://www.datos.gov.co/resource/",choice,".json"),app_token = "WnkJhtSI1mjrtpymw0gVNZEcl",stringsAsFactors = F)
+        write.csv(x = base_original,file = 'base_original.csv')
+        
+        
+        py_run_string('base_original = pd.read_csv("base_original.csv")  ')
         
         # Final
         #py_run_string("base_original = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
@@ -195,11 +204,18 @@ server <- function(input, output) {
         objeto_prueba_5 <- valor_unico_texto_2$valor_unico_texto_p
         v$val_unic <-  py_to_r(objeto_prueba_5)
         
+        # Meta datos
+        # metadatos <- py_run_string('metadatos_p = traer_tabla_scrapeada()')
+        # metadatos_2 <- py_to_r(metadatos)
+        # objeto_prueba_6 <- metadatos_2$metadatos_p
+        # v$meta <- py_to_r(objeto_prueba_6)
+        
     })
     
     options(shiny.maxRequestSize=30*1024^2)
     py_run_string("import numpy as np")
     py_run_string("import pandas as pd")
+    py_run_string("import pickle")
     py_run_string("import sys")
     py_run_string("import codecs")
     py_run_string("sys.setrecursionlimit(10000)")
@@ -218,21 +234,19 @@ server <- function(input, output) {
         }
             else{
                 api_id = input$text
-                r_to_py(api_id)
+                api_id
                 }
         
         
                 })
+
+     output$text <- renderText({
     
-    # output$text <- renderText({
-    #     
-    #     
-    #         v$text <- input$text
-    #         v$text
-    #         data = v$text
-    #         data2 = 'texto.RData'
-    #         
-    # })
+    
+             v$text <- input$text
+             v$text
+    
+     })
     
     
     
@@ -243,18 +257,7 @@ server <- function(input, output) {
     #py_run_string("token =")
     py_run_file("C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\code\\sodapy.py")
     
-    output$contents <- renderDT({
-        
-        # input$file1 will be NULL initially. After the user selects
-        # and uploads a file, head of that data file by default,
-        # or all rows if selected, will be shown.
-        # if(is.null(input$text)) u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
-        #   else u_data <- read.socrata(paste0("https://www.datos.gov.co/resource/",str(input$text),".json"),app_token = "WnkJhtSI1mjrtpymw0gVNZEcl")
-        # 
-        #   u_data
-        # 
-        
-        
+    output$contents <- renderDataTable({
         
         # DNP
         #u_data <- fread("C:/Users/LcmayorquinL/OneDrive - Departamento Nacional de Planeacion/DIDE/2019/Data Science Projects/Data-Quality-App/data/datos_conj.txt",encoding = "UTF-8",header = T)
@@ -264,9 +267,9 @@ server <- function(input, output) {
         
 
         if(input$text==''){
-            u_data <- py_run_string("base_original = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
+            u_data <- py_run_string("base_original_2 = pd.read_csv('https://dl.dropboxusercontent.com/s/kc4ucgg9unptd0p/df_conj_pegados.txt?dl=1')")
             u_data2 <- py_to_r(u_data)
-            u_data3 <-  u_data2$base_original
+            u_data3 <-  u_data2$base_original_2
             u_data4 <- py_to_r(u_data3)
             u_data4 <- u_data4 %>% select(api_id, everything())
             u_data4[-c(2,3)]
@@ -276,18 +279,14 @@ server <- function(input, output) {
         else {
             
             #f8x9-azny
-            load("texto.RData")
-            df <- read.socrata(paste0("https://www.datos.gov.co/resource/",texto,".json"),app_token = "WnkJhtSI1mjrtpymw0gVNZEcl",stringsAsFactors = F)
+            #v$text
+            df <- read.socrata(paste0("https://www.datos.gov.co/resource/",v$text,".json"),app_token = "WnkJhtSI1mjrtpymw0gVNZEcl",stringsAsFactors = F)
             df
             
         }
-    
-
-        
-            
 
     
-})
+},filter = "top")
     
 
 
@@ -329,6 +328,9 @@ server <- function(input, output) {
         v$val_unic
     })
     
-    
+    # Meta datos
+    # output$meta <- renderTable({
+    #     v$meta
+    # })
 }
 shinyApp(ui, server)
