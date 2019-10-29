@@ -244,7 +244,7 @@ server <- function(input, output) {
     
     
              v$text <- input$text
-             v$text
+             paste0('Base escogida: ',v$text)
     
      })
     
@@ -254,7 +254,7 @@ server <- function(input, output) {
 
     #text <- reactive({text=input$text})
     
-    #py_run_string("token =")
+    #py_run_string("token =''")
     py_run_file("C:\\Users\\User\\OneDrive - Departamento Nacional de Planeacion\\DIDE\\2019\\Data Science Projects\\Data-Quality-App\\code\\sodapy.py")
     
     output$contents <- renderDataTable({
