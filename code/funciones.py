@@ -6,6 +6,7 @@ Created on Tue Sep 10 11:13:15 2019
 """
 import pandas as pd
 import numpy as np
+from sodapy import Socrata
 
 ############## EVALUAR TIPOS DE COLUMNAS
 ########## tipos de las columnas
@@ -30,8 +31,10 @@ def val_unicos_col_missing(base):
     return(unicos_columnas)
 
 ########## COMPLETITUD. Missing 
-def missing_porc(base):
+def missing_porc(base,dataframe=False):
     missing_columnas=pd.isnull(base).sum()/len(base)
+    if dataframe is not False:
+        missing_columnas=missing_columnas.reset_index()
     return(missing_columnas)
     #missing_columnas=missing_columnas.rename(columns={0:"Porcentaje de valores faltantes"})
     
@@ -120,6 +123,9 @@ def outliers_porc(base):
     col_tipos=tipo_col(base_numerizada)
     col_num=col_tipos[col_tipos=="float64"].index
     base_num=base_numerizada[col_num]
+    
+    if base_num.shape[1]==0:
+        print("La base de datos no contiene columnas numéricas")
     
     percentiles_25=base_num.apply(lambda x:np.nanpercentile(x,25),axis=0)
     percentiles_75=base_num.apply(lambda x:np.nanpercentile(x,75),axis=0)
