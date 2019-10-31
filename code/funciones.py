@@ -8,6 +8,18 @@ import pandas as pd
 import numpy as np
 from sodapy import Socrata
 
+# BASE
+def sodapy_base(api_id,token=None):
+
+    client = Socrata("www.datos.gov.co",
+                     app_token=token)
+
+    results = client.get(api_id,limit=1000000000)
+    base_original = pd.DataFrame.from_records(results)
+    return(base_original)
+
+base_original = sodapy_base('f8x9-azny')
+
 ############## EVALUAR TIPOS DE COLUMNAS
 ########## tipos de las columnas
 # pasar columnas a numéricos, si posibl
@@ -141,7 +153,9 @@ def outliers_porc(base):
     base_outliers=pd.DataFrame(dic_outliers)
     base_outliers_porc=base_outliers.sum()/base_outliers.shape[0]
 
-    return(base_outliers_porc)        
+    return(base_outliers_porc)    
+
+outliers_porc(base_original)    
     
 ############## describe de columnas
 def descripcion(base):
@@ -287,6 +301,9 @@ def cols_vs_meta(api_id,token=None):
     comparacion="Columnas en metadatos: {0}. Columnas en microdatos: {1}".format(meta_col,micro_col)
     return(comparacion)
     
+    
+cols_vs_meta('f8x9-azny')
+    
 # OBTENER LA TABLA QUE TIENE DATOS ABIERTOS CON INFORMACIÓN DE LAS BASES DE DATOS
 def traer_asset_inventory(token=None):
     import pandas as pd
@@ -295,10 +312,3 @@ def traer_asset_inventory(token=None):
     results = client.get("sxce-zrhe",limit=1000000000)
     asset_inventory = pd.DataFrame.from_records(results)
     return(asset_inventory)
-    
-# OBTENER LA TABLA QUE SE SCRAPEÓ CON LA INFORMACIÓN DE LOS METADATOS DE DATOS ABIERTOS
-def traer_tabla_scrapeada():
-    import pandas as pd
-    tabla_url="https://dl.dropboxusercontent.com/s/kc4g6di6wgmeblv/tabla_final.txt?dl=0"
-    tabla_conj=pd.read_csv(tabla_url)    
-    return(tabla_conj)
